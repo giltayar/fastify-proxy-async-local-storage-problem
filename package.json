@@ -1,0 +1,26 @@
+{
+  "name": "fastify-proxy-async-local-storage-problem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giltayar/fastify-proxy-async-local-storage-problem.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/giltayar/fastify-proxy-async-local-storage-problem/issues"
+  },
+  "homepage": "https://github.com/giltayar/fastify-proxy-async-local-storage-problem#readme",
+  "dependencies": {
+    "@fastify/http-proxy": "^8.2.1",
+    "@fastify/request-context": "^4.0.0",
+    "fastify": "^4.4.0"
+  }
+}
