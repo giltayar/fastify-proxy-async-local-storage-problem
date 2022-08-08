@@ -3,14 +3,21 @@ import fastifyHttpProxy from "@fastify/http-proxy";
 import { deepEqual as assertEqual } from "assert/strict";
 import { fastifyRequestContextPlugin } from "@fastify/request-context";
 import { setTimeout } from "timers/promises";
+import {AsyncLocalStorage} from 'node:async_hooks'
 import throat from "throat";
+
+const store = new AsyncLocalStorage();
 
 const targetInstance = fastify();
 targetInstance.get("/", () => setTimeout(1500).then(() => "It works!"));
 const targetBaseUrl = await targetInstance.listen();
 
 const instance = fastify();
-instance.register(fastifyRequestContextPlugin);
+// instance.register(fastifyRequestContextPlugin);
+instance.addHook('onRequest', (req, reply, next) => {
+  store.run(new Map(), () => next())
+})
+
 instance.register(fastifyHttpProxy, {
   prefix: "/api",
   upstream: targetBaseUrl,
@@ -18,24 +25,28 @@ instance.register(fastifyHttpProxy, {
 });
 instance.get("/result", async (req) => {
   const { time, result } = req.query;
-  await 1
 
-  req.requestContext.set("time", parseInt(time));
-  req.requestContext.set("result", result);
+  let requestContext = store.getStore()
+  requestContext.set("time", parseInt(time));
+  requestContext.set("result", result);
 
   await waitAndResult(req);
 
-  return req.requestContext.get('finalResult')
+  requestContext = store.getStore()
+
+  return requestContext.get('finalResult')
 });
 
 async function waitAndResult(req) {
-  await setTimeout(req.requestContext.get("time"));
+  const requestContext = store.getStore()
 
-  const result = req.requestContext.get("result");
+  await setTimeout(requestContext.get("time"));
+
+  const result = requestContext.get("result");
 
   await 1
 
-  req.requestContext.set('finalResult', result + '!')
+  requestContext.set('finalResult', result + '!')
 
   await 1
 }
