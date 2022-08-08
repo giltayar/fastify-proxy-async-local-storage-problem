@@ -3,10 +3,10 @@ import fastifyHttpProxy from "@fastify/http-proxy";
 import { deepEqual as assertEqual } from "assert/strict";
 import { fastifyRequestContextPlugin } from "@fastify/request-context";
 import { setTimeout } from "timers/promises";
-import throat from 'throat'
+import throat from "throat";
 
 const targetInstance = fastify();
-targetInstance.get("/", () => "It works!");
+targetInstance.get("/", () => setTimeout(1500).then(() => "It works!"));
 const targetBaseUrl = await targetInstance.listen();
 
 const instance = fastify();
@@ -62,7 +62,11 @@ await Promise.all(
           result.toString(),
           `${i} - ${time} - ${result} != ${fetchResult}`
         );
-        process.stdout.write('.')
+        assertEqual(
+          await fetch(new URL("/api", baseUrl)).then((x) => x.text()),
+          "It works!"
+        );
+        process.stdout.write(".");
       })
     )
 );
