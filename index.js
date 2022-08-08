@@ -18,17 +18,26 @@ instance.register(fastifyHttpProxy, {
 });
 instance.get("/result", async (req) => {
   const { time, result } = req.query;
+  await 1
 
   req.requestContext.set("time", parseInt(time));
   req.requestContext.set("result", result);
 
-  return await waitAndResult(req);
+  await waitAndResult(req);
+
+  return req.requestContext.get('finalResult')
 });
 
 async function waitAndResult(req) {
   await setTimeout(req.requestContext.get("time"));
 
-  return await req.requestContext.get("result");
+  const result = req.requestContext.get("result");
+
+  await 1
+
+  req.requestContext.set('finalResult', result + '!')
+
+  await 1
 }
 
 const baseUrl = await instance.listen();
@@ -42,11 +51,11 @@ assertEqual(
   await fetch(new URL("/result?time=100&result=hello", baseUrl)).then((x) =>
     x.text()
   ),
-  "hello"
+  "hello!"
 );
 
 await Promise.all(
-  Array(1000)
+  Array(10000)
     .fill(0)
     .map(
       throat(100, async (_, i) => {
@@ -59,7 +68,7 @@ await Promise.all(
 
         assertEqual(
           fetchResult,
-          result.toString(),
+          result.toString() + '!',
           `${i} - ${time} - ${result} != ${fetchResult}`
         );
         assertEqual(
