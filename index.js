@@ -8,10 +8,13 @@ import throat from "throat";
 
 const store = new AsyncLocalStorage();
 
+// The target of the Proxy
 const targetInstance = fastify();
 targetInstance.get("/", () => setTimeout(1500).then(() => "It works!"));
 const targetBaseUrl = await targetInstance.listen();
 
+// The app that should be causing the problem, and has
+// a regular endpoint and a proxy endpoint to the target app above.
 const instance = fastify();
 // instance.register(fastifyRequestContextPlugin);
 instance.addHook('onRequest', (req, reply, next) => {
@@ -53,6 +56,8 @@ async function waitAndResult(req) {
 
 const baseUrl = await instance.listen();
 
+
+// Just make sure that the apps work
 assertEqual(await fetch(targetBaseUrl).then((x) => x.text()), "It works!");
 assertEqual(
   await fetch(new URL("/api", baseUrl)).then((x) => x.text()),
@@ -65,6 +70,7 @@ assertEqual(
   "hello!"
 );
 
+// Now let's try and reproduce
 await Promise.all(
   Array(10000)
     .fill(0)
